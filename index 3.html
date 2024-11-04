@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos Artesanales helenita</title>
+    <link rel="stylesheet" href="style3.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Nuestros Productos Artesanales</h1>
+        <button id="toggleCart">Ver Canasta (<span id="cartCount">0</span>)</button>
+        <div id="cartContainer" class="cart" style="display: none;">
+            <h2>Canasta de Compras</h2>
+            <div id="cartItems"></div>
+            <p>Costo de envío: $6000</p>
+            <p><strong>Total: $<span id="totalCost">0</span></strong></p>
+            <button id="orderButton">Realizar Pedido</button>
+        </div>
+        <div id="orderForm" class="order-form" style="display: none;">
+            <h2>Datos de Envío</h2>
+            <form id="shippingForm">
+                <input type="text" id="name" placeholder="Nombre de quien recibe" required>
+                <input type="text" id="address" placeholder="Dirección de envío" required>
+                <input type="tel" id="phone" placeholder="Teléfono de contacto" required>
+                <button type="submit" class="submit-btn">Finalizar Pedido</button>
+            </form>
+        </div>
+        <div id="confirmation" class="confirmation" style="display: none;">
+            <h2>¡Pedido Realizado!</h2>
+            <div class="text-center">
+                <p>Y por último, haz click aquí abajo</p>
+                <button id="sendWhatsApp">Enviar pedido por WhatsApp</button>
+            </div>
+        </div>
+        <div class="products" id="productContainer"></div>
+    </div>
+
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+    <script>
+        const products = [
+            { id: 1, name: "Jarrón de Cerámica", price: 14000, stock: 12 },
+            { id: 2, name: "Tapete Tejido a Mano", price: 14000, stock: 8 },
+            { id: 3, name: "Collar de Cuentas", price: 14000, stock: 20 },
+            { id: 4, name: "Cesta de Mimbre", price: 14000, stock: 15 },
+            { id: 5, name: "Cuadro Pintado a Mano", price: 14000, stock: 5 },
+            { id: 6, name: "Set de Velas Aromáticas", price: 14000, stock: 25 },
+            { id: 7, name: "Bolso de Cuero", price: 14000, stock: 10 },
+        ];
+
+        const cart = [];
+        const DELIVERY_COST = 6000;
+        const WHATSAPP_NUMBER = "573132061771";
+
+        function renderProducts() {
+            const container = document.getElementById('productContainer');
+            products.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'product';
+                productElement.innerHTML = `
+                    <img src="imagenes/icono mermelada.png" alt="${product.name}">
+                    <h2>${product.name}</h2>
+                    <p class="price">$${product.price} cop</p>
+                    <p class="stock">Stock: ${product.stock} unidades</p>
+                    <button onclick="addToCart(${product.id})">Agregar a la canasta</button>
+                `;
+                container.appendChild(productElement);
+            });
+        }
+
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                cart.push(product);
+                updateCart();
+            }
+        }
+
+        function removeFromCart(productId) {
+            const index = cart.findIndex(item => item.id === productId);
+            if (index !== -1) {
+                cart.splice(index, 1);
+                updateCart();
+            }
+        }
+
+        function updateCart() {
+            const cartItems = document.getElementById('cartItems');
+            const cartCount = document.getElementById('cartCount');
+            const totalCost = document.getElementById('totalCost');
+
+            cartItems.innerHTML = '';
+            cart.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'cart-item';
+                itemElement.innerHTML = `
+                    <span>${item.name} - $${item.price}</span>
+                    <button onclick="removeFromCart(${item.id})">Eliminar</button>
+                `;
+                cartItems.appendChild(itemElement);
+            });
+
+            cartCount.textContent = cart.length;
+            const total = cart.reduce((sum, item) => sum + item.price, 0) + DELIVERY_COST;
+            totalCost.textContent = total;
+        }
+
+        function generateWhatsAppMessage() {
+            const name = document.getElementById('name').value;
+            const address = document.getElementById('address').value;
+            const phone = document.getElementById('phone').value;
+            const total = cart.reduce((sum, item) => sum + item.price, 0) + DELIVERY_COST;
+
+            let message = `¡Nuevo pedido!\n\n`;
+            message += `Nombre: ${name}\n`;
+            message += `Dirección: ${address}\n`;
+            message += `Teléfono: ${phone}\n\n`;
+            message += `Productos:\n`;
+            cart.forEach(item => {
+                message += `- ${item.name}: $${item.price}\n`;
+            });
+            message += `\nCosto de envío: $${DELIVERY_COST}\n`;
+            message += `Total: $${total}`;
+
+            return encodeURIComponent(message);
+        }
+
+        document.getElementById('toggleCart').addEventListener('click', function() {
+            const cartContainer = document.getElementById('cartContainer');
+            cartContainer.style.display = cartContainer.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.getElementById('orderButton').addEventListener('click', function() {
+            document.getElementById('orderForm').style.display = 'block';
+            document.getElementById('cartContainer').style.display = 'none';
+        });
+
+        document.getElementById('shippingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            document.getElementById('orderForm').style.display = 'none';
+            document.getElementById('confirmation').style.display = 'block';
+        });
+
+        document.getElementById('sendWhatsApp').addEventListener('click', function() {
+            const message = generateWhatsAppMessage();
+            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, '_blank');
+        });
+
+        renderProducts();
+    </script>
+</body>
+</html>
